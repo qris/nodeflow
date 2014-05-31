@@ -11,9 +11,11 @@ module.exports = function(grunt) {
       files: [
         '**/*.js',
         '!node_modules/**/*',
+        '!browser/dist/**/*',
+        '!browser/test/**/*',
       ],
       options: {
-        jshintrc: '.jshintrc'
+        node: true
       }
     },
 
@@ -26,11 +28,22 @@ module.exports = function(grunt) {
         src: ['test/**/*.js']
       }
     },
+
+    browserify: {
+      standalone: {
+        src: [ '<%= pkg.name %>.js' ],
+        dest: './browser/dist/<%= pkg.name %>.standalone.js',
+        options: {
+          standalone: '<%= pkg.name %>'
+        }
+      },
+    },
   });
 
   // Load plug-ins
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-browserify');
   // grunt.loadNpmTasks('grunt-contrib-whatever');
 
   // define tasks
