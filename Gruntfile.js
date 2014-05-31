@@ -38,21 +38,22 @@ module.exports = function(grunt) {
         }
       },
     },
+
+    connect: {
+      server: {},
+    },
   });
 
   // Load plug-ins
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-connect');
   // grunt.loadNpmTasks('grunt-contrib-whatever');
 
   // define tasks
   grunt.registerTask('default', [
     'jshint',
-  ]);
-
-  // define tasks
-  grunt.registerTask('default', [
-    // No tasks, yet
+    'browserify',
   ]);
 };

@@ -21,8 +21,10 @@
   "devDependencies": {
     "browserify": "^4.1.6",
     "grunt-browserify": "^2.1.0",
+    "grunt-contrib-connect": "^0.7.1",
     "grunt-contrib-jshint": "^0.10.0",
-    "grunt-mocha-test": "^0.10.2"
+    "grunt-mocha-test": "^0.10.2",
+    "rabbit.js": "^0.4.1"
   },
   "license": "GPLv3"
 }
