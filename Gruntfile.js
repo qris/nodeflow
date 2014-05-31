@@ -49,6 +49,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadTasks('tasks');
   // grunt.loadNpmTasks('grunt-contrib-whatever');
 
   // define tasks
