@@ -14,20 +14,17 @@ To install dependencies on a freshly checked-out project:
 
 	npm install
 
-To lint, run tests, and build `browser/dist/NodeFlow.standalone.js`:
-
-	grunt
-
-To run the built-in HTTP server (not working?):
+To run the built-in RabbitMQ client and WebSocket server, to receive
+messages from pmacct and forward them to connected in-browser clients:
 
 	grunt server
 
-To run the build-in RabbitMQ client and WebSocket server, to receive
-messages from pmacct and forward them to connected in-browser clients:
+To lint and start the server:
 
-	nodejs lib/NodeFlow/Server.js
+	grunt
 
-Then you can connect to this server using your browser, and receive
-Netflow messages from pmacct, at this URL:
+After starting the server, you can connect to this server using your
+browser with the test client, and see Netflow messages from pmacct on the
+console, by visiting this URL:
 
 * http://localhost:8080/sockjs-client.html

@@ -1,38 +1,23 @@
 /*
  * nodeflow/tasks/server.js
- * Based on node_modules/grunt-browserify/tasks/browserify.js
+ * Based on http://github.com/amiorin/grunt-watchify
  * Copyright (c) 2014 Chris Wilson
+ * Copyright (c) 2013 Alberto Miorin, contributors
+ * Licensed under the MIT license.
  */
 
 'use strict';
 
-var prefix = 'nodeflow.server';
-/*
-* grunt-browserify
-* https://github.com/jmreidy/grunt-browserify
-*
-* Copyright (c) 2013 Justin Reidy
-* Licensed under the MIT license.
-*/
-'use strict';
-var path = require('path');
-var async = require('async');
+module.exports = function(grunt) {
+	var Server = require('../lib/Server');
 
-module.exports = Task;
-
-function Task (grunt) {
-	var task = this;
 	grunt.registerTask('server',
 		"Run the AMQP/RabbitMQ client and WebSocket server",
 		function() {
-			Task.runTask(grunt);
+			var self = this,
+				_ = grunt.util._,
+				done = _.once(self.async());
+			new Server().run();
 		});
-}
-
-Task.runTask = function (grunt, options) {
-	var context = require('rabbit.js').createContext();
-	context.on('ready', function() {
-		log.info(prefix, 'Server starting');
-		require('../lib/server');
-	});
 };
+

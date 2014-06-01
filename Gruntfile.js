@@ -11,7 +11,8 @@ module.exports = function(grunt) {
       files: [
         '**/*.js',
         '!node_modules/**/*',
-        '!browser/dist/**/*',
+        '!lib/<%= pkg.name %>.standalone.js',
+        '!lib/ext/**',
         '!browser/test/**/*',
       ],
       options: {
@@ -29,14 +30,23 @@ module.exports = function(grunt) {
       }
     },
 
-    browserify: {
+    watchify: {
       standalone: {
-        src: [ '<%= pkg.name %>.js' ],
-        dest: './browser/dist/<%= pkg.name %>.standalone.js',
+        src: './lib/<%= pkg.name %>/Client.js',
+        dest: './lib/<%= pkg.name %>.standalone.js',
         options: {
           standalone: '<%= pkg.name %>'
         }
-      },
+      }
+    },
+
+    watch: {
+      app: {
+        files: './lib/<%= pkg.name %>.standalone.js',
+        options: {
+          livereload: true
+        }
+      }
     },
 
     connect: {
@@ -49,12 +59,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-watchify');
+
+  // Load custom tasks
   grunt.loadTasks('tasks');
-  // grunt.loadNpmTasks('grunt-contrib-whatever');
 
   // define tasks
   grunt.registerTask('default', [
     'jshint',
-    'browserify',
+    // 'watchify',
+    'server',
   ]);
 };
