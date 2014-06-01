@@ -1,0 +1,15 @@
+<html><body>
+	<script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+	<script type="text/javascript">
+var sock = new SockJS('http://localhost:8080/socks');
+ sock.onopen = function() {
+     console.log('open');
+ };
+ sock.onmessage = function(e) {
+     console.log('message', e.data);
+ };
+ sock.onclose = function() {
+     console.log('close');
+};
+	</script>
+</body></html>

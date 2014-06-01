@@ -22,4 +22,12 @@ To run the built-in HTTP server (not working?):
 
 	grunt server
 
+To run the build-in RabbitMQ client and WebSocket server, to receive
+messages from pmacct and forward them to connected in-browser clients:
 
+	nodejs lib/NodeFlow/Server.js
+
+Then you can connect to this server using your browser, and receive
+Netflow messages from pmacct, at this URL:
+
+* http://localhost:8080/sockjs-client.html
