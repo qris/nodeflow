@@ -1,5 +1,9 @@
 /*
  * nodeflow/tasks/server.js
+ *
+ * Defines a Grunt task "server" which runs the AMQP/RabbitMQ client and
+ * WebSocket server defined by the Server class.
+ *
  * Based on http://github.com/amiorin/grunt-watchify
  * Copyright (c) 2014 Chris Wilson
  * Copyright (c) 2013 Alberto Miorin, contributors

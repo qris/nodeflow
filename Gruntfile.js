@@ -14,6 +14,7 @@ module.exports = function(grunt) {
         '!lib/<%= pkg.name %>.standalone.js',
         '!lib/ext/**',
         '!browser/test/**/*',
+        '!test/js/qunit-1.14.0.js',
       ],
       options: {
         node: true
