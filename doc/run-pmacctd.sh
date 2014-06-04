@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo `dirname $0`/../../pmacct-1.5.0rc3/src/pmacctd -f `dirname $0`/pmacctd-amqp.conf -i lo -d
