@@ -132,6 +132,67 @@ define(
 				"The inserted data should have been aggregated");
 		});
 
+		test("Aggregation combines all but top X results into " +
+			"'Other' category", function()
+		{
+			var db = new Client.Database({
+				aggregate_by: [new Client.AggregateOnField('ip_src')]
+			});
+
+			insert_packets(db, [
+				{ip_src: '1.2.3.1', bytes: 1000},
+				{ip_src: '1.2.3.2', bytes: 2000},
+				{ip_src: '1.2.3.3', bytes: 3000},
+				{ip_src: '1.2.3.4', bytes: 4000},
+				{ip_src: '1.2.3.5', bytes: 5000},
+				{ip_src: '1.2.3.6', bytes: 6000},
+				{ip_src: '1.2.3.7', bytes: 7000},
+				{ip_src: '1.2.3.8', bytes: 8000},
+				{ip_src: '1.2.3.9', bytes: 9000},
+				{ip_src: '1.2.3.10', bytes: 10000},
+				{ip_src: '1.2.3.11', bytes: 11000},
+				{ip_src: '1.2.3.12', bytes: 12000},
+			]);
+			var results = db.aggregated();
+			function extract_data(results)
+			{
+				var series_data = {};
+				jquery.each(results, function(key, value) {
+					series_data[key] = value.data;
+				});
+				return series_data;
+			}
+
+			var expected_results = {
+				'1.2.3.3': {bytes: 3000},
+				'1.2.3.4': {bytes: 4000},
+				'1.2.3.5': {bytes: 5000},
+				'1.2.3.6': {bytes: 6000},
+				'1.2.3.7': {bytes: 7000},
+				'1.2.3.8': {bytes: 8000},
+				'1.2.3.9': {bytes: 9000},
+				'1.2.3.10': {bytes: 10000},
+				'1.2.3.11': {bytes: 11000},
+				'1.2.3.12': {bytes: 12000},
+				'Other': {bytes: 3000},
+			};
+
+			// convert format to match actual results
+			for (var i in expected_results)
+			{
+				var bytes = expected_results[i].bytes;
+				expected_results[i] = [
+					[sample_packet.timeslot_start, 0],
+					[sample_packet.timeslot_end, bytes]
+				];
+			}
+
+			deepEqual(extract_data(results), expected_results,
+				"The inserted data should have been " +
+				"aggregated and the smallest rows combined " +
+				"into the category 'Other'");
+		});
+
 		/*
 		 * When we receive no data from the server in a particular
 		 * interval, that means that it didn't see any packets, so
