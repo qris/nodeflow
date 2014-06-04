@@ -17,7 +17,8 @@ define(
 		function FakeSockJsClient() {
 		}
 
-		test("create a Controller", function() {
+		test("create a Controller", function()
+		{
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
 				socket: sock
@@ -45,7 +46,8 @@ define(
 			"timeslot_end": 2000
 		};
 
-		test("send messages to Controller", function() {
+		test("send messages to Controller", function()
+		{
 			var sock = new FakeSockJsClient();
 			var db = new Client.Database();
 			var con = new Client.Controller({
@@ -65,7 +67,8 @@ define(
 			clearInterval(handle);
 		});
 
-		test("Controller creates Database with default aggregation", function() {
+		test("Controller creates Database with default aggregation", function()
+		{
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
 				socket: sock,
@@ -88,7 +91,8 @@ define(
 			}
 		}
 
-		test("Database aggregates packets", function() {
+		test("Database aggregates packets", function()
+		{
 			var db = new Client.Database({
 				aggregate_by: [new Client.AggregateOnField('ip_src')]
 			});
@@ -133,7 +137,8 @@ define(
 		 * interval, that means that it didn't see any packets, so
 		 * the series should be filled with a zero entry inbetween.
 		 */
-		test("Database fills gaps with zeroes", function() {
+		test("Database fills gaps with zeroes", function()
+		{
 			var db = new Client.Database({
 				aggregate_by: [new Client.AggregateOnField('ip_src')]
 			});
