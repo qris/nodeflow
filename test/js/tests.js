@@ -91,6 +91,15 @@ define(
 			}
 		}
 
+		function extract_data(results)
+		{
+			var series_data = {};
+			jquery.each(results, function(key, value) {
+				series_data[key] = value.data;
+			});
+			return series_data;
+		}
+
 		test("Database aggregates packets", function()
 		{
 			var db = new Client.Database({
@@ -104,15 +113,6 @@ define(
 
 			insert_packets(db, [{}]);
 			var results = db.aggregated();
-			function extract_data(results)
-			{
-				var series_data = {};
-				jquery.each(results, function(key, value) {
-					series_data[key] = value.data;
-				});
-				return series_data;
-			}
-
 			var expected_results = {};
 			expected_results[sample_packet.ip_src] = [
 				[sample_packet.timeslot_start, 0],
@@ -130,6 +130,57 @@ define(
 			results = db.aggregated();
 			deepEqual(extract_data(results), expected_results,
 				"The inserted data should have been aggregated");
+		});
+
+		test("Database aggregates packets by direction", function()
+		{
+			var db = new Client.Database({
+				filter: [
+					new Client.FilterByDirection([sample_packet.ip_src])
+				],
+				aggregate_by: [
+					new Client.AggregateOnField('ip_inside'),
+					new Client.AggregateOnField('direction')
+				]
+			});
+
+			insert_packets(db, [
+				{ // outbound
+					ip_src: sample_packet.ip_src,
+					ip_dst: sample_packet.ip_dst,
+					bytes: 100
+				},
+				{ // inbound
+					ip_src: sample_packet.ip_dst,
+					ip_dst: sample_packet.ip_src,
+					bytes: 200
+				},
+				{ // internal (ignored)
+					ip_src: sample_packet.ip_src,
+					ip_dst: sample_packet.ip_src,
+					bytes: 300
+				},
+				{ // external (ignored)
+					ip_src: sample_packet.ip_dst,
+					ip_dst: sample_packet.ip_dst,
+					bytes: 400
+				}
+			]);
+
+			var actual_results = db.aggregated();
+			var expected_results = {};
+			expected_results[sample_packet.ip_src + ",out"] = [
+				[sample_packet.timeslot_start, 0],
+				[sample_packet.timeslot_end, 100]
+			];
+			expected_results[sample_packet.ip_src + ",in"] = [
+				[sample_packet.timeslot_start, 0],
+				[sample_packet.timeslot_end, -200]
+			];
+			deepEqual(extract_data(actual_results), expected_results,
+				"The inserted data should have been " +
+				"aggregated by direction relative to the " +
+				"configured home network address.");
 		});
 
 		test("Aggregation combines all but top X results into " +
