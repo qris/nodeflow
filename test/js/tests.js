@@ -6,7 +6,7 @@
 
 // http://www.jshint.com/docs/
 /* jshint node: false, -W097 */
-/* global QUnit, define, test, ok, equal, deepEqual */
+/* global QUnit, define, test, asyncTest, start, ok, equal, deepEqual */
 
 // http://api.qunitjs.com/QUnit.config/#entry-examples
 QUnit.config.autostart = false;
@@ -23,7 +23,8 @@ define(
 			var con = new Client.Controller({
 				socket: sock
 			});
-			con.run();
+			var handle = con.run();
+			clearInterval(handle);
 			equal(sock, con.sock);
 			equal('function', typeof sock.onopen,
 				"Controller should have set event handlers on the socket");
@@ -46,15 +47,28 @@ define(
 			"timeslot_end": 2000
 		};
 
-		test("send messages to Controller", function()
+		asyncTest("send messages to Controller", function()
 		{
 			var sock = new FakeSockJsClient();
-			var db = new Client.Database();
+			var db = new Client.Database({
+				filters: [
+					new Client.Filter.Coalesce(['ip_src'])
+				],
+				labeller: new Client.Labeller('ip_src')
+			});
 			var con = new Client.Controller({
 				socket: sock,
 				database: db
 			});
 			var handle = con.run();
+			var old_chart_redraw = con.chart.redraw;
+			con.chart.redraw = function()
+			{
+				con.chart.redraw.fired++;
+				return old_chart_redraw.apply(this);
+			};
+			con.chart.redraw.fired = 0;
+
 			equal(con.database, db);
 			sock.onmessage({data: JSON.stringify(sample_packet)});
 			deepEqual(db.all(), [sample_packet], "The received " +
@@ -62,12 +76,27 @@ define(
 
 			// Test that data ends up in the graph after
 			// update_chart has fired.
-			deepEqual([], con.chart.plot.getData());
-
-			clearInterval(handle);
+			deepEqual([], con.chart.plot.getData(),
+				"The chart should have an empty data set to draw");
+			equal(con.chart.redraw.fired, 0, "Chart should not " +
+				"have been updated yet, apart from the " +
+				"initial run before we patched update_chart");
+			setTimeout(function() {
+				start();
+				clearInterval(handle);
+				equal(1, con.chart.redraw.fired,
+				"Chart should have been updated once, " +
+				"since we patched update_chart");
+				var chart_data = con.chart.plot.getData();
+				equal(1, chart_data.length,
+					"There should be one series in the Chart now");
+				equal(chart_data[0].label, sample_packet.ip_src,
+					"The series must have a label, or " +
+					"it will not be drawn on the Plot");
+			}, 1000);
 		});
 
-		test("Controller creates Database with default aggregation", function()
+		test("Controller creates Database with default filters", function()
 		{
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
@@ -76,8 +105,11 @@ define(
 			});
 			con.run();
 			ok(con.database instanceof Client.Database);
-			deepEqual(con.database.options.aggregate_by,
-				[new Client.AggregateOnField('ip_src')],
+			deepEqual(con.database.options.filters,
+				[
+					new Client.Filter.LocalTime(),
+					new Client.Filter.Coalesce(['ip_src'])
+				],
 				"Controller should have created a Database " +
 				"which aggregates on ip_src by default");
 		});
@@ -103,18 +135,18 @@ define(
 		test("Database aggregates packets", function()
 		{
 			var db = new Client.Database({
-				aggregate_by: [new Client.AggregateOnField('ip_src')]
+				filters: [new Client.Filter.Coalesce(['ip_src'])]
 			});
 
-			deepEqual(db.options.aggregate_by,
-				[new Client.AggregateOnField('ip_src')],
+			deepEqual(db.options.filters,
+				[new Client.Filter.Coalesce(['ip_src'])],
 				"Database should have used our custom " +
 				"aggregation settings");
 
 			insert_packets(db, [{}]);
 			var results = db.aggregated();
 			var expected_results = {};
-			expected_results[sample_packet.ip_src] = [
+			expected_results["ip_src=" + sample_packet.ip_src] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, sample_packet.bytes]
 			];
@@ -123,7 +155,7 @@ define(
 
 			// Write another packet to a different destination
 			insert_packets(db, [{ip_dst: "1.2.3.4"}]);
-			expected_results[sample_packet.ip_src] = [
+			expected_results["ip_src=" + sample_packet.ip_src] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, sample_packet.bytes * 2]
 			];
@@ -132,15 +164,71 @@ define(
 				"The inserted data should have been aggregated");
 		});
 
+		test("Packet filters", function()
+		{
+			var tz_offset = -(new Date().getTimezoneOffset() * 60 * 1000);
+
+			deepEqual(
+				new Client.Filter.LocalTime()
+					.filter([sample_packet]),
+				[jquery.extend({}, sample_packet,
+					{timeslot_start: sample_packet.timeslot_start +
+						tz_offset,
+					timeslot_end: sample_packet.timeslot_end +
+						tz_offset,
+					cloned: true})]);
+
+			deepEqual(
+				new Client.Filter.Field({ip_src: sample_packet.ip_src})
+					.filter([sample_packet]),
+				[sample_packet]);
+
+			deepEqual(
+				new Client.Filter.Field({ip_src: sample_packet.ip_dst}, "Other")
+					.filter([sample_packet]),
+				[jquery.extend({}, sample_packet,
+					{ip_src: "Other", cloned: true})]);
+
+			var packet_without_directional_fields =
+				jquery.extend({}, sample_packet);
+			delete packet_without_directional_fields.ip_src;
+			delete packet_without_directional_fields.ip_dst;
+			delete packet_without_directional_fields.port_src;
+			delete packet_without_directional_fields.port_dst;
+
+			deepEqual(
+				new Client.Filter.Direction([sample_packet.ip_src])
+					.filter([sample_packet]),
+				[jquery.extend({}, packet_without_directional_fields,
+					{
+						direction: 'out',
+						ip_inside: sample_packet.ip_src,
+						ip_outside: sample_packet.ip_dst,
+						port_inside: sample_packet.port_src,
+						port_outside: sample_packet.port_dst,
+						cloned: true
+					})]);
+
+			deepEqual(
+				new Client.Filter.Coalesce(['ip_src'])
+					.filter([sample_packet]),
+				[{
+					ip_src: sample_packet.ip_src,
+					bytes: sample_packet.bytes,
+					packets: sample_packet.packets,
+					flows: sample_packet.flows,
+					timeslot_start: sample_packet.timeslot_start,
+					timeslot_end: sample_packet.timeslot_end,
+					cloned: true
+				}]);
+		});
+
 		test("Database aggregates packets by direction", function()
 		{
 			var db = new Client.Database({
-				filter: [
-					new Client.FilterByDirection([sample_packet.ip_src])
-				],
-				aggregate_by: [
-					new Client.AggregateOnField('ip_inside'),
-					new Client.AggregateOnField('direction')
+				filters: [
+					new Client.Filter.Direction([sample_packet.ip_src]),
+					new Client.Filter.Coalesce(['ip_inside', 'direction'])
 				]
 			});
 
@@ -169,11 +257,19 @@ define(
 
 			var actual_results = db.aggregated();
 			var expected_results = {};
-			expected_results[sample_packet.ip_src + ",out"] = [
+			expected_results[
+				db.aggregation_key({
+					ip_inside: sample_packet.ip_src,
+					direction: "out"
+				})] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, 100]
 			];
-			expected_results[sample_packet.ip_src + ",in"] = [
+			expected_results[
+				db.aggregation_key({
+					ip_inside: sample_packet.ip_src,
+					direction: "in"
+				})] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, -200]
 			];
@@ -187,7 +283,7 @@ define(
 			"'Other' category", function()
 		{
 			var db = new Client.Database({
-				aggregate_by: [new Client.AggregateOnField('ip_src')]
+				filters: [new Client.Filter.Coalesce(['ip_src'])]
 			});
 
 			insert_packets(db, [
@@ -215,16 +311,16 @@ define(
 			}
 
 			var expected_results = {
-				'1.2.3.3': {bytes: 3000},
-				'1.2.3.4': {bytes: 4000},
-				'1.2.3.5': {bytes: 5000},
-				'1.2.3.6': {bytes: 6000},
-				'1.2.3.7': {bytes: 7000},
-				'1.2.3.8': {bytes: 8000},
-				'1.2.3.9': {bytes: 9000},
-				'1.2.3.10': {bytes: 10000},
-				'1.2.3.11': {bytes: 11000},
-				'1.2.3.12': {bytes: 12000},
+				'ip_src=1.2.3.3': {bytes: 3000},
+				'ip_src=1.2.3.4': {bytes: 4000},
+				'ip_src=1.2.3.5': {bytes: 5000},
+				'ip_src=1.2.3.6': {bytes: 6000},
+				'ip_src=1.2.3.7': {bytes: 7000},
+				'ip_src=1.2.3.8': {bytes: 8000},
+				'ip_src=1.2.3.9': {bytes: 9000},
+				'ip_src=1.2.3.10': {bytes: 10000},
+				'ip_src=1.2.3.11': {bytes: 11000},
+				'ip_src=1.2.3.12': {bytes: 12000},
 				'Other': {bytes: 3000},
 			};
 
@@ -252,7 +348,7 @@ define(
 		test("Database fills gaps with zeroes", function()
 		{
 			var db = new Client.Database({
-				aggregate_by: [new Client.AggregateOnField('ip_src')]
+				filters: [new Client.Filter.Coalesce(['ip_src'])]
 			});
 
 			insert_packets(db, [
@@ -275,7 +371,7 @@ define(
 			}
 
 			var expected_results = {};
-			expected_results[sample_packet.ip_src] =
+			expected_results["ip_src=" + sample_packet.ip_src] =
 			[
 				[1200, 0],
 				[1202, 200 * 500],
@@ -309,7 +405,7 @@ define(
 		 */
 		test("Aggregate ", function() {
 			var db = new Client.Database({
-				aggregate_by: [new Client.AggregateOnField('ip_src')]
+				filters: [new Client.Filter.Coalesce(['ip_src'])]
 			});
 
 			insert_packets(db, [
@@ -332,7 +428,7 @@ define(
 			}
 
 			var expected_results = {};
-			expected_results[sample_packet.ip_src] =
+			expected_results["ip_src=" + sample_packet.ip_src] =
 			[
 				[1200, 0],
 				[1202, 200 * 500],
@@ -348,7 +444,6 @@ define(
 				"into bytes/second, and the gap filled with " +
 				"a zero record in the middle");
 		});
-
 
 		// Finally start QUnit.
 		// QUnit.load();
