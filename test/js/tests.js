@@ -101,7 +101,8 @@ define(
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
 				socket: sock,
-				start_update_timer: false
+				start_update_timer: false,
+				show_local_times: true
 			});
 			con.run();
 			ok(con.database instanceof Client.Database);
@@ -290,6 +291,52 @@ define(
 			equal(actual_results[key_out].opposite_direction,
 				actual_results[key_in], "Series with opposite " +
 				"directions should be linked together");
+		});
+
+		function convert_to_rate(packet)
+		{
+			return packet.bytes * 1000 /
+				(packet.timeslot_end - packet.timeslot_start);
+		}
+
+		function convert_to_kbps(packet)
+		{
+			return convert_to_rate(packet) * 8 / 1000;
+		}
+
+		test("Controller updates the data table as data is added", function()
+		{
+			var sock = new FakeSockJsClient();
+			var con = new Client.Controller({
+				socket: sock,
+				home_networks: [sample_packet.ip_src]
+			});
+			var handle = con.run();
+			clearInterval(handle);
+
+			con.database.insert(sample_packet);
+			con.update_chart_now();
+
+			// Find the data table and extract results from it
+			var table = con.table.element;
+			equal(1, table.length);
+
+			var headings = [];
+			jquery("th", table).each(function(i, element)
+				{
+					headings[i] = jquery(element).text();
+				});
+			deepEqual(headings, ["Local IP", "Totals (MB)",
+				"Average (kb/s)", "Down", "Up", "Down", "Up"]);
+
+			var row = [];
+			jquery("td", table).each(function(i, element)
+				{
+					row[i] = jquery(element).text();
+				});
+			deepEqual(row, [sample_packet.ip_src,
+				"" + sample_packet.bytes, "",
+				"" + convert_to_kbps(sample_packet), ""]);
 		});
 
 		test("Aggregation combines all but top X results into " +
