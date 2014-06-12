@@ -257,26 +257,39 @@ define(
 
 			var actual_results = db.aggregated();
 			var expected_results = {};
-			expected_results[
-				db.aggregation_key({
-					ip_inside: sample_packet.ip_src,
-					direction: "out"
-				})] = [
+
+			var key_out = db.aggregation_key({
+				ip_inside: sample_packet.ip_src,
+				direction: "out"
+			});
+			expected_results[key_out] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, 100]
 			];
-			expected_results[
-				db.aggregation_key({
-					ip_inside: sample_packet.ip_src,
-					direction: "in"
-				})] = [
+
+			var key_in = db.aggregation_key({
+				ip_inside: sample_packet.ip_src,
+				direction: "in"
+			});
+			expected_results[key_in] = [
 				[sample_packet.timeslot_start, 0],
 				[sample_packet.timeslot_end, -200]
 			];
+
+			ok(key_out != key_in, "in and out direction series " +
+				"keys should be different");
+
 			deepEqual(extract_data(actual_results), expected_results,
 				"The inserted data should have been " +
 				"aggregated by direction relative to the " +
 				"configured home network address.");
+
+			equal(actual_results[key_in].opposite_direction,
+				actual_results[key_out], "Series with opposite " +
+				"directions should be linked together");
+			equal(actual_results[key_out].opposite_direction,
+				actual_results[key_in], "Series with opposite " +
+				"directions should be linked together");
 		});
 
 		test("Aggregation combines all but top X results into " +
