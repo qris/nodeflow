@@ -80,13 +80,13 @@ define(
 				"The chart should have an empty data set to draw");
 			equal(con.chart.redraw.fired, 0, "Chart should not " +
 				"have been updated yet, apart from the " +
-				"initial run before we patched update_chart");
+				"initial run before we patched redraw()");
 			setTimeout(function() {
 				start();
 				clearInterval(handle);
 				equal(1, con.chart.redraw.fired,
 				"Chart should have been updated once, " +
-				"since we patched update_chart");
+				"since we patched redraw()");
 				var chart_data = con.chart.plot.getData();
 				equal(1, chart_data.length,
 					"There should be one series in the Chart now");
