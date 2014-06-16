@@ -190,25 +190,38 @@ define(
 				[jquery.extend({}, sample_packet,
 					{ip_src: "Other", cloned: true})]);
 
+			var sample_packet_rfc1918 = jquery.extend({},
+				sample_packet, {ip_src: "192.168.0.2"});
+
 			var packet_without_directional_fields =
-				jquery.extend({}, sample_packet);
+				jquery.extend({}, sample_packet_rfc1918);
 			delete packet_without_directional_fields.ip_src;
 			delete packet_without_directional_fields.ip_dst;
 			delete packet_without_directional_fields.port_src;
 			delete packet_without_directional_fields.port_dst;
+			jquery.extend(packet_without_directional_fields, {
+				direction: 'out',
+				ip_inside: "192.168.0.2",
+				ip_outside: sample_packet.ip_dst,
+				port_inside: sample_packet.port_src,
+				port_outside: sample_packet.port_dst,
+				cloned: true
+			});
 
 			deepEqual(
-				new Client.Filter.Direction([sample_packet.ip_src])
-					.filter([sample_packet]),
-				[jquery.extend({}, packet_without_directional_fields,
-					{
-						direction: 'out',
-						ip_inside: sample_packet.ip_src,
-						ip_outside: sample_packet.ip_dst,
-						port_inside: sample_packet.port_src,
-						port_outside: sample_packet.port_dst,
-						cloned: true
-					})]);
+				new Client.Filter.Direction(["192.168.0.2"])
+					.filter([sample_packet_rfc1918]),
+				[packet_without_directional_fields]);
+
+			deepEqual(
+				new Client.Filter.Direction(["192.168.0.0/24"])
+					.filter([sample_packet_rfc1918]),
+				[packet_without_directional_fields]);
+
+			deepEqual(
+				new Client.Filter.Direction(["192.168.1.0/24"])
+					.filter([sample_packet_rfc1918]),
+				[]);
 
 			deepEqual(
 				new Client.Filter.Coalesce(['ip_src'])

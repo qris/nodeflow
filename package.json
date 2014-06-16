@@ -29,6 +29,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-mocha-test": "^0.10.2",
     "grunt-watchify": "^0.1.0",
+    "netmask": "^1.0.4",
     "npmlog": "0.0.6",
     "rabbit.js": "^0.4.1",
     "sockjs": "^0.3.9",
