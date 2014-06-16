@@ -319,14 +319,20 @@ define(
 
 		test("Controller updates the data table as data is added", function()
 		{
+			var home_network = "86.30.0.0/16";
+			ok(new Netmask(home_network).contains(sample_packet.ip_src),
+				"This test will fail unless the sample " +
+				"packet is contained in the home network");
+
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
 				socket: sock,
-				home_networks: [sample_packet.ip_src]
+				home_networks: [home_network]
 			});
 			var handle = con.run();
 			clearInterval(handle);
 
+			// An outbound packet (upload)
 			con.database.insert(sample_packet);
 			con.update_chart_now();
 
@@ -334,22 +340,70 @@ define(
 			var table = con.table.element;
 			equal(1, table.length);
 
-			var headings = [];
-			jquery("th", table).each(function(i, element)
+			function assertElementText(selector, expected_contents)
+			{
+				// Convert all expected contents to text,
+				// to match what we'll actually find in HTML.
+				for (var i = 0; i < expected_contents.length; i++)
 				{
-					headings[i] = jquery(element).text();
-				});
-			deepEqual(headings, ["Local IP", "Totals (MB)",
+					expected_contents[i] = "" + expected_contents[i];
+				}
+
+				var text = [];
+				jquery(selector, table).each(function(i, element)
+					{
+						text[i] = jquery(element).text();
+					});
+				deepEqual(text, expected_contents);
+			}
+			
+			assertElementText("th", ["Local IP", "Totals (MB)",
 				"Average (kb/s)", "Down", "Up", "Down", "Up"]);
 
-			var row = [];
-			jquery("td", table).each(function(i, element)
-				{
-					row[i] = jquery(element).text();
+			assertElementText("td", [sample_packet.ip_src,
+				"", sample_packet.bytes,
+				"", convert_to_kbps(sample_packet)]);
+
+			// An inbound packet (download)
+			var inbound_packet = jquery.extend({}, sample_packet, {
+				ip_src: sample_packet.ip_dst,
+				ip_dst: sample_packet.ip_src,
+				bytes: 4095
+			});
+			insert_packets(con.database, [inbound_packet]);
+			con.update_chart_now();
+
+			assertElementText("td", [
+				sample_packet.ip_src,
+				inbound_packet.bytes,
+				sample_packet.bytes,
+				convert_to_kbps(inbound_packet),
+				convert_to_kbps(sample_packet)]);
+
+			// Insert a packet that only has an inbound flow
+			var inbound_only_dst = "86.30.0.2";
+			ok(new Netmask(home_network).contains(inbound_only_dst),
+				"This test will fail unless the sample " +
+				"packet is contained in the home network");
+			var inbound_only_packet = jquery.extend({},
+				sample_packet, {
+					ip_src: sample_packet.ip_dst,
+					ip_dst: inbound_only_dst,
+					bytes: 2001
 				});
-			deepEqual(row, [sample_packet.ip_src,
-				"" + sample_packet.bytes, "",
-				"" + convert_to_kbps(sample_packet), ""]);
+			insert_packets(con.database, [inbound_only_packet]);
+			con.update_chart_now();
+
+			// Check that its table row is rendered properly
+			assertElementText("td", [sample_packet.ip_src,
+				inbound_packet.bytes,
+				sample_packet.bytes,
+				convert_to_kbps(inbound_packet),
+				convert_to_kbps(sample_packet),
+				inbound_only_dst,
+				"2001", "",
+				convert_to_kbps(inbound_only_packet), ""
+				]);
 		});
 
 		test("Aggregation combines all but top X results into " +
