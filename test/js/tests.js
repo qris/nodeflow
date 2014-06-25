@@ -12,8 +12,8 @@
 QUnit.config.autostart = false;
 
 define(
-	['Client', 'jquery'],
-	function(Client, jquery) {
+	['Client', 'jquery', 'cjs!netmask'],
+	function(Client, jquery, netmask) {
 		function FakeSockJsClient() {
 		}
 
@@ -320,7 +320,7 @@ define(
 		test("Controller updates the data table as data is added", function()
 		{
 			var home_network = "86.30.0.0/16";
-			ok(new Netmask(home_network).contains(sample_packet.ip_src),
+			ok(new netmask.Netmask(home_network).contains(sample_packet.ip_src),
 				"This test will fail unless the sample " +
 				"packet is contained in the home network");
 
@@ -382,7 +382,7 @@ define(
 
 			// Insert a packet that only has an inbound flow
 			var inbound_only_dst = "86.30.0.2";
-			ok(new Netmask(home_network).contains(inbound_only_dst),
+			ok(new netmask.Netmask(home_network).contains(inbound_only_dst),
 				"This test will fail unless the sample " +
 				"packet is contained in the home network");
 			var inbound_only_packet = jquery.extend({},

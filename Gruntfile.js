@@ -11,6 +11,7 @@ module.exports = function(grunt) {
       files: [
         '**/*.js',
         '!node_modules/**/*',
+        '!bower_components/**/*',
         '!lib/<%= pkg.name %>.standalone.js',
         '!lib/ext/**',
         '!browser/test/**/*',
