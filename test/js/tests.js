@@ -53,14 +53,23 @@ define(
 		function FakeSockJsClient() {
 		}
 
+		function create_controller(options)
+		{
+			var sock = new FakeSockJsClient();
+			options = jquery.extend({
+				socket: sock,
+				start_update_timer: false
+			}, options);
+			return new Client.Controller(options);
+		}
+
 		test("create a Controller", function()
 		{
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
 				socket: sock
 			});
-			var handle = con.run();
-			clearInterval(handle);
+			con.run();
 			equal(sock, con.sock);
 			equal('function', typeof sock.onopen,
 				"Controller should have set event handlers on the socket");
@@ -85,16 +94,15 @@ define(
 
 		asyncTest("send messages to Controller", function()
 		{
-			var sock = new FakeSockJsClient();
 			var db = new Client.Database({
 				filters: [
 					new Client.Filter.Coalesce(['ip_src'])
 				],
 				labeller: new Client.Labeller('ip_src')
 			});
-			var con = new Client.Controller({
-				socket: sock,
-				database: db
+			var con = create_controller({
+				database: db,
+				start_update_timer: true
 			});
 			var handle = con.run();
 			var old_chart_redraw = con.chart.redraw;
@@ -106,7 +114,7 @@ define(
 			con.chart.redraw.fired = 0;
 
 			equal(con.database, db);
-			sock.onmessage({data: JSON.stringify(sample_packet)});
+			con.sock.onmessage({data: JSON.stringify(sample_packet)});
 			deepEqual(db.all(), [sample_packet], "The received " +
 				"packet should have been saved in the database");
 
@@ -134,10 +142,7 @@ define(
 
 		test("Controller creates Database with default filters", function()
 		{
-			var sock = new FakeSockJsClient();
-			var con = new Client.Controller({
-				socket: sock,
-				start_update_timer: false,
+			var con = create_controller({
 				show_local_times: true
 			});
 			con.run();
@@ -360,13 +365,10 @@ define(
 				"This test will fail unless the sample " +
 				"packet is contained in the home network");
 
-			var sock = new FakeSockJsClient();
-			var con = new Client.Controller({
-				socket: sock,
+			var con = create_controller({
 				home_networks: [home_network]
 			});
-			var handle = con.run();
-			clearInterval(handle);
+			con.run();
 
 			// An outbound packet (upload)
 			con.database.insert(sample_packet);
