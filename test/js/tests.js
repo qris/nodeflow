@@ -568,7 +568,8 @@ define(
 		 * interval, that means that it didn't see any packets, so
 		 * the series should be filled with a zero entry inbetween.
 		 */
-		test("Aggregate ", function() {
+		test("Aggregation should fill gaps between flow records " +
+			"with zeroes ", function() {
 			var db = new Client.Database({
 				filters: [new Client.Filter.Coalesce(['ip_src'])]
 			});
