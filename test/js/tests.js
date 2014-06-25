@@ -11,12 +11,44 @@
 define(
 	['Client', 'jquery', 'cjs!qunit', 'cjs!netmask'],
 	function(Client, jquery, QUnit, netmask) {
+		// http://api.qunitjs.com/QUnit.config/#entry-examples
+		QUnit.config.autostart = false;
+		QUnit.config.autorun = false;
 		var test = QUnit.test;
 		var asyncTest = QUnit.asyncTest;
 		var start = QUnit.start;
 		var ok = QUnit.ok;
 		var equal = QUnit.equal;
 		var deepEqual = QUnit.deepEqual;
+		var fixtures = {};
+
+		// Initialise the sandbox
+		jquery.ajax({
+			url: '../sockjs-client.html',
+			dataType: 'html',
+			success: function(data, textStatus, jqXHR)
+			{
+				fixtures.html = jquery(data);
+				fixtures.html = $(jquery.grep(fixtures.html,
+					function(elementOfArray, indexInArray)
+					{
+						return (elementOfArray.nodeName != 'SCRIPT');
+					}));
+
+				// Finally start QUnit.
+				QUnit.load();
+				QUnit.start();
+			},
+		});
+
+		QUnit.module("module", {
+			setup: function(assert) {
+				var fixture_container = jquery('#qunit-fixture');
+				fixture_container.empty();
+				fixture_container.append(fixtures.html.clone());
+				window.location.hash = '';
+			}
+		});
 
 		function FakeSockJsClient() {
 		}
@@ -576,8 +608,5 @@ define(
 				"a zero record in the middle");
 		});
 
-		// Finally start QUnit.
-		// QUnit.load();
-		// QUnit.start();
 	}
 );
