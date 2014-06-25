@@ -6,7 +6,7 @@
 
 // http://www.jshint.com/docs/
 /* jshint node: false, -W097 */
-/* global define */
+/* global window, define */
 
 define(
 	['Client', 'jquery', 'cjs!qunit', 'cjs!netmask'],
@@ -610,5 +610,24 @@ define(
 				"a zero record in the middle");
 		});
 
+
+		test("Controller should initialise itself and form fields " +
+			"from hash parameters", function() {
+			window.location.hash = '#home_networks=192.168.0.0/24;' +
+				'aggregate=ip_dst';
+			var con = create_controller();
+			con.run();
+			deepEqual(con.database.options.filters,
+				[
+					new Client.Filter.Direction(["192.168.0.0/24"]),
+					new Client.Filter.Coalesce(['ip_dst'])
+				],
+				"Controller should have initialised filters " +
+				"from hash parameters");
+			deepEqual(con.database.options.labeller,
+				new Client.Labeller('ip_dst'),
+				"Controller should have configured Labeller " +
+				"from hash parameters");
+		});
 	}
 );
