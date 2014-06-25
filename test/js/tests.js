@@ -6,14 +6,18 @@
 
 // http://www.jshint.com/docs/
 /* jshint node: false, -W097 */
-/* global QUnit, define, test, asyncTest, start, ok, equal, deepEqual */
-
-// http://api.qunitjs.com/QUnit.config/#entry-examples
-QUnit.config.autostart = false;
+/* global define */
 
 define(
-	['Client', 'jquery', 'cjs!netmask'],
-	function(Client, jquery, netmask) {
+	['Client', 'jquery', 'cjs!qunit', 'cjs!netmask'],
+	function(Client, jquery, QUnit, netmask) {
+		var test = QUnit.test;
+		var asyncTest = QUnit.asyncTest;
+		var start = QUnit.start;
+		var ok = QUnit.ok;
+		var equal = QUnit.equal;
+		var deepEqual = QUnit.deepEqual;
+
 		function FakeSockJsClient() {
 		}
 
