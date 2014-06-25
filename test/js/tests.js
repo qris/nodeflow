@@ -629,6 +629,14 @@ define(
 				new Client.Labeller('ip_dst'),
 				"Controller should have configured Labeller " +
 				"from hash parameters");
+			deepEqual(jquery('.netgraph-home-networks input').map(
+				function(index, domElement)
+				{
+					return domElement.value;
+				}).get(),
+				["192.168.0.0/24"],
+				"Controller should have populated form " +
+				"fields from hash parameters");
 		});
 	}
 );
