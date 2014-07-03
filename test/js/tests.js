@@ -29,7 +29,7 @@ define(
 			success: function(data, textStatus, jqXHR)
 			{
 				fixtures.html = jquery(data);
-				fixtures.html = $(jquery.grep(fixtures.html,
+				fixtures.html = jquery(jquery.grep(fixtures.html,
 					function(elementOfArray, indexInArray)
 					{
 						return (elementOfArray.nodeName != 'SCRIPT');
@@ -611,7 +611,6 @@ define(
 				"a zero record in the middle");
 		});
 
-
 		test("Controller should initialise itself and form fields " +
 			"from hash parameters", function() {
 			window.location.hash = '#home_networks=192.168.0.0/24;' +
@@ -634,9 +633,50 @@ define(
 				{
 					return domElement.value;
 				}).get(),
-				["192.168.0.0/24"],
+				['192.168.0.0/24'],
 				"Controller should have populated form " +
 				"fields from hash parameters");
+			var add_network_text = jquery('input#netgraph-home-network-add[type=text]');
+			equal(1, add_network_text.length,
+				"should be an empty text field to add a new " +
+				"home network");
+			add_network_text.val('192.168.2.0/23');
+			var add_network_button = jquery('button[name=netgraph-home-network-add-button]');
+			equal(1, add_network_button.length,
+				"should be a button to add a new home network");
+			add_network_button.trigger('click');
+			deepEqual(jquery('.netgraph-home-networks input').map(
+				function(index, domElement)
+				{
+					return domElement.value;
+				}).get(),
+				['192.168.0.0/24', '192.168.2.0/23'],
+				"Controller should have created another text " +
+				"field for the home network just added");
+			equal(jquery('input#netgraph-home-network-add[type=text]').length, 1,
+				"should be an empty text field to add another " +
+				"home network");
+			deepEqual(con.database.options.filters,
+				[
+					new Client.Filter.Direction([
+						'192.168.0.0/24',
+						'192.168.2.0/23'
+					]),
+					new Client.Filter.Coalesce(['ip_dst'])
+				],
+				"Controller should have updated filters " +
+				"when another home network was added");
+			equal(window.location.hash,
+				'#home_networks=192.168.0.0/24,192.168.2.0/23;' +
+				'aggregate=ip_dst',
+				"Controller should have updated window " +
+				"location hash when another home network " +
+				"was added");
+			// test that changes in controller are reflected in UI
+			// and location target, and vice versa.
+			// test remove button.
+			// test that removing all networks switches back to
+			// nondirectional mode, and vice versa.
 		});
 	}
 );
