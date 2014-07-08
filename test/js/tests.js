@@ -611,31 +611,44 @@ define(
 				"a zero record in the middle");
 		});
 
+		function assert_filters(controller, networks, coalesce,
+			labeller, message)
+		{
+			deepEqual(controller.options.home_networks, networks,
+				"controller state: " + message);
+			deepEqual(controller.database.options.filters,
+				[
+					new Client.Filter.Direction(networks),
+					new Client.Filter.Coalesce(coalesce)
+				],
+				"filters: " + message);
+			deepEqual(controller.database.options.labeller,
+				new Client.Labeller(labeller),
+				"labeller: " + message);
+			deepEqual(jquery('.netgraph-home-networks input').map(
+				function(index, domElement)
+				{
+					return domElement.value;
+				}).get(),
+				networks,
+				"form fields: " + message);
+			equal(window.location.hash,
+				'#home_networks=' + networks.join(',') + ';' +
+				'aggregate=' + coalesce.join(','),
+				"window location hash: " + message);
+		}
+
 		test("Controller should initialise itself and form fields " +
 			"from hash parameters", function() {
 			window.location.hash = '#home_networks=192.168.0.0/24;' +
 				'aggregate=ip_dst';
 			var con = create_controller();
 			con.run();
-			deepEqual(con.database.options.filters,
-				[
-					new Client.Filter.Direction(["192.168.0.0/24"]),
-					new Client.Filter.Coalesce(['ip_dst'])
-				],
-				"Controller should have initialised filters " +
-				"from hash parameters");
-			deepEqual(con.database.options.labeller,
-				new Client.Labeller('ip_dst'),
-				"Controller should have configured Labeller " +
-				"from hash parameters");
-			deepEqual(jquery('.netgraph-home-networks input').map(
-				function(index, domElement)
-				{
-					return domElement.value;
-				}).get(),
-				['192.168.0.0/24'],
-				"Controller should have populated form " +
-				"fields from hash parameters");
+
+			assert_filters(con, ["192.168.0.0/24"], ['ip_dst'],
+				'ip_dst', "Controller should have initialised " +
+				"itself from hash parameters");
+
 			var add_network_text = jquery('input#netgraph-home-network-add[type=text]');
 			equal(1, add_network_text.length,
 				"should be an empty text field to add a new " +
@@ -645,36 +658,22 @@ define(
 			equal(1, add_network_button.length,
 				"should be a button to add a new home network");
 			add_network_button.trigger('click');
-			deepEqual(jquery('.netgraph-home-networks input').map(
-				function(index, domElement)
-				{
-					return domElement.value;
-				}).get(),
-				['192.168.0.0/24', '192.168.2.0/23'],
-				"Controller should have created another text " +
-				"field for the home network just added");
-			equal(jquery('input#netgraph-home-network-add[type=text]').length, 1,
-				"should be an empty text field to add another " +
-				"home network");
-			deepEqual(con.database.options.filters,
-				[
-					new Client.Filter.Direction([
-						'192.168.0.0/24',
-						'192.168.2.0/23'
-					]),
-					new Client.Filter.Coalesce(['ip_dst'])
-				],
-				"Controller should have updated filters " +
-				"when another home network was added");
-			equal(window.location.hash,
-				'#home_networks=192.168.0.0/24,192.168.2.0/23;' +
-				'aggregate=ip_dst',
-				"Controller should have updated window " +
-				"location hash when another home network " +
-				"was added");
+
+			assert_filters(con, ['192.168.0.0/24', '192.168.2.0/23'],
+				['ip_dst'], 'ip_dst', "Controller should have " +
+				"updated everything for newly added network");
+
+			// test remove button - the first one.
+			var remove_network_button =
+				jquery('.netgraph-home-network-remove');
+			remove_network_button.trigger('click');
+
+			assert_filters(con, ['192.168.2.0/23'],
+				['ip_dst'], 'ip_dst', "Controller should have " +
+				"updated everything for newly added network");
+
 			// test that changes in controller are reflected in UI
 			// and location target, and vice versa.
-			// test remove button.
 			// test that removing all networks switches back to
 			// nondirectional mode, and vice versa.
 		});
