@@ -632,6 +632,13 @@ define(
 				}).get(),
 				networks,
 				"form fields: " + message);
+			deepEqual(jquery('.netgraph-home-networks input').map(
+				function(index, domElement)
+				{
+					return jquery(domElement).data('old-value');
+				}).get(),
+				networks,
+				"recorded old values of form fields: " + message);
 			equal(window.location.hash,
 				'#home_networks=' + networks.join(',') + ';' +
 				'aggregate=' + coalesce.join(','),
@@ -671,6 +678,12 @@ define(
 			assert_filters(con, ['192.168.2.0/23'],
 				['ip_dst'], 'ip_dst', "Controller should have " +
 				"updated everything for newly added network");
+
+			// test changing text box value
+			jquery('.netgraph-home-network-addr').val('192.168.3.0/24').trigger('change');
+			assert_filters(con, ['192.168.3.0/24'],
+				['ip_dst'], 'ip_dst', "Controller should have " +
+				"updated everything for modified network");
 
 			// test that changes in controller are reflected in UI
 			// and location target, and vice versa.
