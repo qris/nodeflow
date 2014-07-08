@@ -46,7 +46,7 @@ define(
 				var fixture_container = jquery('#qunit-fixture');
 				fixture_container.empty();
 				fixture_container.append(fixtures.html.clone());
-				window.location.hash = '';
+				window.location.replace('#');
 			}
 		});
 
