@@ -614,7 +614,7 @@ define(
 		function assert_filters(controller, networks, coalesce,
 			labeller, message)
 		{
-			deepEqual(controller.options.home_networks, networks,
+			deepEqual(controller.home_networks, networks,
 				"controller state: " + message);
 			deepEqual(controller.database.options.filters,
 				[
@@ -622,7 +622,7 @@ define(
 					new Client.Filter.Coalesce(coalesce)
 				],
 				"filters: " + message);
-			deepEqual(controller.database.options.labeller,
+			deepEqual(controller.database.labeller,
 				new Client.Labeller(labeller),
 				"labeller: " + message);
 			deepEqual(jquery('.netgraph-home-networks input').map(
@@ -645,6 +645,16 @@ define(
 				"window location hash: " + message);
 		}
 
+		// This is kind of dodgy. Why not? It makes sense to keep the
+		// location hash in sync with the current configuration.
+		test("Controller should not assume default values for " +
+			"location hash parameters, except aggregate", function() {
+			var con = create_controller();
+			con.run();
+			equal(window.location.hash, "#aggregate=ip_src");
+		});
+
+			window.location.hash = '#home_networks=192.168.0.0/24;' +
 		test("Controller should initialise itself and form fields " +
 			"from hash parameters", function() {
 			window.location.hash = '#home_networks=192.168.0.0/24;' +
@@ -677,7 +687,7 @@ define(
 
 			assert_filters(con, ['192.168.2.0/23'],
 				['ip_dst'], 'ip_dst', "Controller should have " +
-				"updated everything for newly added network");
+				"updated everything when network was removed");
 
 			// test changing text box value
 			jquery('.netgraph-home-network-addr').val('192.168.3.0/24').trigger('change');
