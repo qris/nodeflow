@@ -15,6 +15,7 @@ config.node = {
     ]
 };
 
+/*
 config.browser = {
     environment: "browser",
     rootPath: "../",
@@ -25,4 +26,4 @@ config.browser = {
         "test/js/tests.js"
     ]
 };
-
+*/

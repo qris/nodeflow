@@ -82,14 +82,19 @@ module.exports = function(grunt) {
         // don't inject, use a custom runner to get a RequireJS script tag
       },
     },
+
+    buster: {
+      server: {}
+    }
   });
 
   // Load plug-ins
-  grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-buster');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-watchify');
 
   // Load custom tasks
@@ -104,5 +109,5 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test:online', ['connect', 'qunit:online',]);
   grunt.registerTask('test:offline', ['qunit:offline',]);
-  grunt.registerTask('test', ['test:offline',]);
+  grunt.registerTask('test', ['buster', 'test:offline',]);
 };

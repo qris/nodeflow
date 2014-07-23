@@ -25,11 +25,9 @@ To lint and start the server:
 
 	grunt
 
-After starting the server, you can connect to this server using your
-browser with the test client, and see Netflow messages from pmacct on the
-console, by visiting this URL:
-
-* http://localhost:8080/www/client.html
+After starting the server, you can
+[connect to this server](http://localhost:8080/www/client.html) using your
+browser, and see the Netflow traffic graphed.
 
 ## Running tests
 
@@ -43,17 +41,19 @@ command line with:
 
 	grunt test
 
-Note: you [need PhantomJS 2.0](https://github.com/ariya/phantomjs/issues/10952)
-for the tests to pass. You can
-[download it here](https://groups.google.com/d/msg/phantomjs/cgTH-jqCSGg/RGWsAHiVSZAJ),
-open the ZIP file, find the correct PhantomJS binary for your system, and copy it
-to `node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs`,
+Note: you need PhantomJS 2.0 for the tests to pass, but `npm` currently
+installs 1.9.7 instead, which
+[doesn't work](https://github.com/ariya/phantomjs/issues/10952). To upgrade
+your `npm` installation to 2.0:
+
+* [Download it here](https://groups.google.com/d/msg/phantomjs/cgTH-jqCSGg/RGWsAHiVSZAJ)
+* Open the ZIP file and extract the correct PhantomJS binary for your system
+* Copy it to `node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs`,
 replacing the PhantomJS 1.9.7 binary installed by `grunt-contrib-qunit`.
 
-Or you can run the tests in a web browser by starting the dummy server:
+You can also run the tests in a web browser by starting the dummy server:
 
 	grunt connect:server:keepalive
 
-and then opening the test suite in your browser at
-http://localhost:1234/test/runner.html.
+and then [open the test suite in your browser](http://localhost:1234/test/runner.html).
 
