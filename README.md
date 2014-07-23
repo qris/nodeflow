@@ -27,4 +27,4 @@ After starting the server, you can connect to this server using your
 browser with the test client, and see Netflow messages from pmacct on the
 console, by visiting this URL:
 
-* http://localhost:8080/sockjs-client.html
+* http://localhost:8080/www/client.html

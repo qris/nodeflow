@@ -24,7 +24,7 @@ define(
 
 		// Initialise the sandbox
 		jquery.ajax({
-			url: '../sockjs-client.html',
+			url: '../www/client.html',
 			dataType: 'html',
 			success: function(data, textStatus, jqXHR)
 			{
