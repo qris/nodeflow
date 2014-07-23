@@ -46,8 +46,29 @@ buster.testCase("Server", {
 
 	"responds to get_network_interfaces request": function()
 	{
-		assert.equals(assert.rpc.call(this, 'get_network_interfaces'),
-			['response', 'get_network_interfaces',
-				os.networkInterfaces()]);
+		var expected = os.networkInterfaces();
+		var actual = assert.rpc.call(this, 'get_network_interfaces');
+
+		// Travis seems to generate random MAC addresses each time we
+		// ask for the list of interfaces, so we need to remove them
+		// to ensure that we have something to compare.
+		function delete_mac_addresses(interfaces)
+		{
+			for (var interface_name in interfaces)
+			{
+				var addresses = interfaces[interface_name];
+				for (var i = 0; i < addresses.length; i++)
+				{
+					delete addresses[i].mac;
+				}
+			}
+		}
+		delete_mac_addresses(expected);
+		delete_mac_addresses(actual);
+
+		assert.equals(actual,
+			['response', 'get_network_interfaces', expected],
+			"should have got a list of network interfaces in " +
+			"response to the get_network_interfaces command");
 	}
 });
