@@ -15,3 +15,14 @@ config.node = {
     ]
 };
 
+config.browser = {
+    environment: "browser",
+    rootPath: "../",
+    sources: [
+        "lib/Client.js",
+    ],
+    tests: [
+        "test/js/tests.js"
+    ]
+};
+
