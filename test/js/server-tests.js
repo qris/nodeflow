@@ -7,10 +7,10 @@ var buster = require("buster");
 var assert = buster.referee.assert;
 var Server = require('../../lib/Server.js');
 
-function assert_rpc() {
+assert.rpc = function() {
 	this.conn.handlers.data(JSON.stringify(arguments));
 	return JSON.parse(this.conn.written[0]);
-}
+};
 
 buster.testCase("Server", {
 	setUp: function()
@@ -40,13 +40,13 @@ buster.testCase("Server", {
 
 	"responds properly to invalid request": function()
 	{
-		assert.equals(assert_rpc.call(this, 'foobar'),
-			['error', 'foobar', 'unknown command'])
+		assert.equals(assert.rpc.call(this, 'foobar'),
+			['error', 'foobar', 'unknown command']);
 	},
 
 	"responds to get_network_interfaces request": function()
 	{
-		assert.equals(assert_rpc.call(this, 'get_network_interfaces'),
+		assert.equals(assert.rpc.call(this, 'get_network_interfaces'),
 			['response', 'get_network_interfaces',
 				os.networkInterfaces()]);
 	}

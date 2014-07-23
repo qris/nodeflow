@@ -4,7 +4,7 @@
 
 var config = module.exports;
 
-config["node"] = {
+config.node = {
     environment: "node",
     rootPath: "../",
     sources: [
