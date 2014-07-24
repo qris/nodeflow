@@ -70,5 +70,64 @@ buster.testCase("Server", {
 		assert.equals(actual, expected,
 			"should have got a list of network interfaces in " +
 			"response to the get_network_interfaces command");
-	}
+	},
+
+	"responds to incoming data from RabbitMQ by forwarding it": function()
+	{
+		// Mock the server's RabbitMQ context
+		this.server.context = {
+			// Fake server.context.socket() method to return our fake socket
+			socket: function() {
+				return this.fake_socket;
+			},
+			fake_socket: {
+				// which has a connect() method that does nothing
+				connect: function() { },
+				// and an on() method which captures the handler
+				on: function(event_name, handler)
+				{
+					this.handlers[event_name] = handler;
+				},
+				// and an object to store captured handlers
+				handlers: { },
+			},
+		};
+
+		// We also need a mock SockJS connection, which captures the
+		// data written to it.
+		var mock_connection = {
+			written: [],
+			write: function(data)
+			{
+				this.written.push(data);
+			},
+			// fake event handler for incoming packets from client
+			on: function(message) { },
+		};
+
+		// Initiate a fake "connection", check that the handler is bound
+		this.server.onConnection(mock_connection);
+		var handler = this.server.context.fake_socket.handlers.data;
+		assert.defined(handler, "Server should have bound a handler " +
+			"for data events");
+
+		// Now send a test packet to the handler
+		var packet = {
+			timeslot_start: 1,
+			timeslot_end: 2,
+		};
+
+		handler(JSON.stringify(packet));
+		var expected_write = ['packet',
+			{
+				timeslot_start: Date.parse('1'),
+				timeslot_end: Date.parse('2'),
+			}
+		];
+
+		assert.equals(mock_connection.written[0],
+			JSON.stringify(expected_write),
+			"Server should have sent the packet to the " +
+			"connected SockJS client");
+	},
 });

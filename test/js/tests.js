@@ -9,8 +9,8 @@
 /* global window, define */
 
 define(
-	['Client', 'jquery', 'cjs!qunit', 'cjs!netmask'],
-	function(Client, jquery, QUnit, netmask) {
+	['Client', 'jquery', 'cjs!qunit', 'cjs!netmask', 'sinon'],
+	function(Client, jquery, QUnit, netmask, sinon) {
 		// http://api.qunitjs.com/QUnit.config/#entry-examples
 		QUnit.config.autostart = false;
 		QUnit.config.autorun = false;
@@ -114,7 +114,10 @@ define(
 			con.chart.redraw.fired = 0;
 
 			equal(con.database, db);
-			con.sock.onmessage({data: JSON.stringify(sample_packet)});
+			con.sock.onmessage({
+				type: 'message',
+				data: JSON.stringify(['packet', sample_packet]),
+			});
 			deepEqual(db.all(), [sample_packet], "The received " +
 				"packet should have been saved in the database");
 
