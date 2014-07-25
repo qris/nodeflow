@@ -16,6 +16,7 @@
   },
   "homepage": "https://github.com/qris/nodeflow",
   "dependencies": {
+    "es6-promise": "^1.0.0",
     "grunt-contrib-jshint": "^0.10.0"
   },
   "devDependencies": {
