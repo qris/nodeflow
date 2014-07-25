@@ -703,5 +703,48 @@ define(
 			// test that removing all networks switches back to
 			// nondirectional mode, and vice versa.
 		});
+
+		asyncTest("Controller should initialize itself using " +
+			"get_network_interfaces RPC to server if no hash " +
+			"parameters are supplied", function() {
+
+			var sock = new FakeSockJsClient();
+			var messages = [];
+			sock.send = sinon.spy(function(message) {
+				messages.push(message);
+				var props = JSON.parse(message);
+				equal(props[1], 'get_network_interfaces');
+				if (props[1] == 'get_network_interfaces') {
+					this.onmessage({data: JSON.stringify([
+						'response', props[0], props[1],
+						{"lo":[{"address":"127.0.0.1","family":"IPv4","internal":true},{"address":"::1","family":"IPv6","internal":true}],
+						"wlan0":[{"address":"192.168.2.142","family":"IPv4","internal":false},{"address":"fe80::234:ffff:aaaa:bbbb","family":"IPv6","internal":false}]}
+						])
+					});
+				}
+				else
+				{
+					throw new Error("Unknown command: " + props[1]);
+				}
+			});
+			var con = create_controller({socket: sock});
+			Client.Controller.sequence = 1;
+			con.run();
+
+			setTimeout(function()
+				{
+					start();
+					ok(sock.send.calledOnce);
+					deepEqual(messages, [JSON.stringify([1, 'get_network_interfaces'])],
+						"client should have sent a single RPC request, " +
+						"get_network_interfaces");
+					assert_filters(con, ['127.0.0.1', '192.168.2.142'],
+						['ip_inside', 'direction'], 'ip_inside',
+						"Controller should have called " +
+						"get_network_interfaces and " +
+						"initialised itself");
+				}, 2);
+			stop();
+		});
 	}
 );
