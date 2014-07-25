@@ -8,7 +8,8 @@ var assert = buster.referee.assert;
 var Server = require('../../lib/Server.js');
 
 assert.rpc = function() {
-	this.conn.handlers.data(JSON.stringify(arguments));
+	var args = Array.prototype.slice.apply(arguments);
+	this.conn.handlers.data(JSON.stringify(args));
 	return JSON.parse(this.conn.written[0]);
 };
 
@@ -40,15 +41,15 @@ buster.testCase("Server", {
 
 	"responds properly to invalid request": function()
 	{
-		assert.equals(assert.rpc.call(this, 'foobar'),
-			['error', 'foobar', 'unknown command']);
+		assert.equals(assert.rpc.call(this, 123, 'foobar'),
+			['error', 123, 'foobar', 'unknown command']);
 	},
 
 	"responds to get_network_interfaces request": function()
 	{
-		var expected = ['response', 'get_network_interfaces',
+		var actual = assert.rpc.call(this, 1234, 'get_network_interfaces');
+		var expected = ['response', 1234, 'get_network_interfaces',
 			os.networkInterfaces()];
-		var actual = assert.rpc.call(this, 'get_network_interfaces');
 
 		// Travis seems to generate random MAC addresses each time we
 		// ask for the list of interfaces, so we need to remove them
@@ -64,8 +65,8 @@ buster.testCase("Server", {
 				}
 			}
 		}
-		delete_mac_addresses(expected[2]);
-		delete_mac_addresses(actual[2]);
+		delete_mac_addresses(expected[3]);
+		delete_mac_addresses(actual[3]);
 
 		assert.equals(actual, expected,
 			"should have got a list of network interfaces in " +
