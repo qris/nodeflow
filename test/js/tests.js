@@ -16,7 +16,6 @@ define(
 		QUnit.config.autorun = false;
 		var test = QUnit.test;
 		var asyncTest = QUnit.asyncTest;
-		var start = QUnit.start;
 		var ok = QUnit.ok;
 		var equal = QUnit.equal;
 		var deepEqual = QUnit.deepEqual;
@@ -129,7 +128,7 @@ define(
 				"have been updated yet, apart from the " +
 				"initial run before we patched redraw()");
 			setTimeout(function() {
-				start();
+				QUnit.start();
 				clearInterval(handle);
 				equal(1, con.chart.redraw.fired,
 				"Chart should have been updated once, " +
@@ -733,7 +732,6 @@ define(
 
 			setTimeout(function()
 				{
-					start();
 					ok(sock.send.calledOnce);
 					deepEqual(messages, [JSON.stringify([1, 'get_network_interfaces'])],
 						"client should have sent a single RPC request, " +
@@ -743,8 +741,8 @@ define(
 						"Controller should have called " +
 						"get_network_interfaces and " +
 						"initialised itself");
+					QUnit.start();
 				}, 2);
-			stop();
 		});
 	}
 );
