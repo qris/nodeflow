@@ -656,7 +656,6 @@ define(
 			equal(window.location.hash, "#aggregate=ip_src");
 		});
 
-			window.location.hash = '#home_networks=192.168.0.0/24;' +
 		test("Controller should initialise itself and form fields " +
 			"from hash parameters", function() {
 			window.location.hash = '#home_networks=192.168.0.0/24;' +
