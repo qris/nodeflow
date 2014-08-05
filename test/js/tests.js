@@ -613,37 +613,59 @@ define(
 				"a zero record in the middle");
 		});
 
-		function assert_filters(controller, networks, coalesce,
+		function assert_filters(controller, networks, aggregate,
 			labeller, message)
 		{
 			deepEqual(controller.home_networks, networks,
 				"controller state: " + message);
-			deepEqual(controller.database.options.filters,
-				[
-					new Client.Filter.Direction(networks),
-					new Client.Filter.Coalesce(coalesce)
-				],
-				"filters: " + message);
+
+			var aggregate_with_direction = [aggregate];
+			if (networks !== undefined && networks.length > 0)
+			{
+				aggregate_with_direction.push('direction');
+			}
+
+			if (networks !== undefined && networks.length > 0)
+			{
+				deepEqual(controller.database.options.filters,
+					[
+						new Client.Filter.Direction(networks),
+						new Client.Filter.Coalesce(aggregate_with_direction),
+					],
+					"filters: " + message);
+			}
+			else
+			{
+				deepEqual(controller.database.options.filters,
+					[new Client.Filter.Coalesce(aggregate_with_direction)],
+					"filters: " + message);
+			}
+
 			deepEqual(controller.database.labeller,
 				new Client.Labeller(labeller),
 				"labeller: " + message);
+
 			deepEqual(jquery('.netgraph-home-networks input').map(
 				function(index, domElement)
 				{
 					return domElement.value;
 				}).get(),
-				networks,
+				networks || [],
 				"form fields: " + message);
+
 			deepEqual(jquery('.netgraph-home-networks input').map(
 				function(index, domElement)
 				{
 					return jquery(domElement).data('old-value');
 				}).get(),
-				networks,
+				networks || [],
 				"recorded old values of form fields: " + message);
-			equal(window.location.hash,
-				'#home_networks=' + networks.join(',') + ';' +
-				'aggregate=' + coalesce.join(','),
+
+			var home_networks_param =
+				(networks === undefined ? '' :
+				 ("home_networks=" + networks.join(',') + ';'));
+			equal(window.location.hash, '#' + home_networks_param +
+				'aggregate=' + aggregate,
 				"window location hash: " + message);
 		}
 
@@ -663,9 +685,9 @@ define(
 			var con = create_controller();
 			con.run();
 
-			assert_filters(con, ["192.168.0.0/24"], ['ip_dst'],
-				'ip_dst', "Controller should have initialised " +
-				"itself from hash parameters");
+			assert_filters(con, ["192.168.0.0/24"], 'ip_dst', 'ip_dst',
+				"Controller should have initialised itself " +
+				"from hash parameters");
 
 			var add_network_text = jquery('input#netgraph-home-network-add[type=text]');
 			equal(1, add_network_text.length,
@@ -678,7 +700,7 @@ define(
 			add_network_button.trigger('click');
 
 			assert_filters(con, ['192.168.0.0/24', '192.168.2.0/23'],
-				['ip_dst'], 'ip_dst', "Controller should have " +
+				'ip_dst', 'ip_dst', "Controller should have " +
 				"updated everything for newly added network");
 
 			// test remove button - the first one.
@@ -687,13 +709,13 @@ define(
 			remove_network_button.trigger('click');
 
 			assert_filters(con, ['192.168.2.0/23'],
-				['ip_dst'], 'ip_dst', "Controller should have " +
+				'ip_dst', 'ip_dst', "Controller should have " +
 				"updated everything when network was removed");
 
 			// test changing text box value
 			jquery('.netgraph-home-network-addr').val('192.168.3.0/24').trigger('change');
 			assert_filters(con, ['192.168.3.0/24'],
-				['ip_dst'], 'ip_dst', "Controller should have " +
+				'ip_dst', 'ip_dst', "Controller should have " +
 				"updated everything for modified network");
 
 			// test that changes in controller are reflected in UI
@@ -736,12 +758,63 @@ define(
 						"client should have sent a single RPC request, " +
 						"get_network_interfaces");
 					assert_filters(con, ['127.0.0.1', '192.168.2.142'],
-						['ip_inside', 'direction'], 'ip_inside',
+						'ip_inside', 'ip_inside',
 						"Controller should have called " +
 						"get_network_interfaces and " +
 						"initialised itself");
 					QUnit.start();
 				}, 2);
+		});
+
+		test("Controller should select the right aggregation option " +
+			"from its hash parameters", function() {
+			var con = create_controller({
+				// Provide a param_string to disable configuration by RPC
+				param_string: "aggregate=port_src"
+			});
+			con.run();
+
+			assert_filters(con, undefined, 'port_src', 'port_src',
+				"Controller should have initialised itself " +
+				"from param string");
+			equal('port_src', jquery('.netgraph-aggregate-select').val(),
+				"Controller should have selected the select " +
+				"box item corresponding to the current " +
+				"aggregation");
+		});
+
+		test("User can change column to aggregate", function() {
+			var con = create_controller({
+				// Provide a param_string to disable configuration by RPC
+				param_string: "home_networks="
+			});
+			con.run();
+
+			assert_filters(con, [], 'ip_src', 'ip_src',
+				"Controller should have initialised itself " +
+				"from param string");
+			deepEqual(['ip_src', 'ip_dst', 'port_src', 'port_dst'],
+				con.aggregate_options, "Controller should " +
+				"allow aggregation by source and dest port " +
+				"and IP when no home networks configured");
+			deepEqual(con.aggregate_options,
+				jquery('.netgraph-aggregate-select option').map(
+				function(index, domElement)
+				{
+					return domElement.value;
+				}).get(),
+				"Controller should allow user to configure " +
+				"aggregation by source and dest port and IP " +
+				"when no home networks configured");
+			var aggregate_select = jquery(".netgraph-aggregate-select");
+			equal(aggregate_select.val(), 'ip_src', "Aggregation " +
+				"by ip_src should be selected by default");
+			aggregate_select.val('ip_dst');
+			aggregate_select.trigger('change');
+
+			assert_filters(con, [], 'ip_dst', 'ip_dst',
+				"Controller should have updated itself to " +
+				"match new selected aggregation");
 		});
 	}
 );
