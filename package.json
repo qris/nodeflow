@@ -4,7 +4,7 @@
   "author": "Chris Wilson <chris+github@qwirx.com>",
   "description": "A JavaScript Netflow/IPFIX collector and graphing tool",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test --debug"
   },
   "main": "index",
   "repository": {
