@@ -24,4 +24,4 @@ before_script:
   #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin
   #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
   # - cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
-  - cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs /usr/local/phantomjs/bin/phantomjs
+  - sudo cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs /usr/local/phantomjs/bin/phantomjs
