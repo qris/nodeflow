@@ -816,5 +816,43 @@ define(
 				"Controller should have updated itself to " +
 				"match new selected aggregation");
 		});
+
+		test("User can change time parameters", function() {
+			var con = create_controller();
+			var time_before = Date.now();
+			con.run();
+
+			QUnit.strictEqual(undefined, con.time_start);
+			equal(60, con.time_window);
+
+			var chart_options = con.chart.update_x_axis();
+			ok(chart_options.now >= time_before,
+				"update_x_axis() should have returned the " +
+				"current timestamp (>= " + time_before + ")");
+
+			var time_after = Date.now();
+			ok(chart_options.now <= time_after,
+				"update_x_axis() should have returned the " +
+				"current timestamp (<= " + time_after + ")");
+			equal(chart_options.max, chart_options.now,
+				"update_x_axis() should have set the chart " +
+				"maximum to the current time unless " +
+				"overridden by chart options");
+			equal(chart_options.min, chart_options.max - (60 * 1000),
+				"update_x_axis() should have set the chart " +
+				"minimum to 60 seconds ago, unless " +
+				"overridden by chart options");
+
+			var axis_opts = con.chart.plot.getXAxes()[0].options;
+			ok(axis_opts.max >= time_before,
+				"update_x_axis() max should have been " +
+				"applied to the chart's X axis");
+			ok(axis_opts.max <= time_after,
+				"update_x_axis() max should have been " +
+				"applied to the chart's X axis");
+			equal(axis_opts.min, axis_opts.max - 60*1000,
+				"update_x_axis() min should have been " +
+				"applied to the chart's X axis");
+		});
 	}
 );
