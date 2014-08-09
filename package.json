@@ -17,7 +17,10 @@
   "homepage": "https://github.com/qris/nodeflow",
   "dependencies": {
     "es6-promise": "^1.0.0",
-    "grunt-contrib-jshint": "^0.10.0"
+    "grunt-contrib-jshint": "^0.10.0",
+    "mongodb": "^1.4.8",
+    "promised-mongo": "^0.11.1",
+    "q": "^1.0.1"
   },
   "devDependencies": {
     "async": "^0.9.0",

@@ -2,21 +2,77 @@
 
 "use strict";
 
-var os = require("os");
+var extend = require('extend');
 var buster = require("buster");
-var assert = buster.referee.assert;
+var os = require("os");
+var Q = require('q');
 var Server = require('../../lib/Server.js');
 
+var assert = buster.referee.assert;
+
 assert.rpc = function() {
+	assert.equals(0, this.conn.written.length,
+		"There should be no incoming messages left over: " +
+		JSON.stringify(this.conn.written));
+
 	var args = Array.prototype.slice.apply(arguments);
 	this.conn.handlers.data(JSON.stringify(args));
-	return JSON.parse(this.conn.written[0]);
+
+	assert.equals(1, this.conn.written.length,
+		"There should only be one incoming message: " +
+		JSON.stringify(this.conn.written));
+	return JSON.parse(this.conn.written.pop());
 };
 
 buster.testCase("Server", {
 	setUp: function()
 	{
-		this.server = new Server();
+		// We need a mock MongoDB collection, which captures the
+		// data written to it.
+		function FakeMongoDb() {};
+		extend(FakeMongoDb.prototype, {
+			inserted: [],
+			insert: function(data, callback)
+			{
+				// create a copy, for safety
+				data = extend({}, data);
+				this.inserted.push(data);
+				if (callback)
+				{
+					callback(undefined, data);
+				}
+			}
+		});
+
+		function FakeMongo() {};
+		extend(FakeMongo.prototype, {
+			connect: function(uri, callback)
+			{
+				/*
+				ok(callback === undefined, "we should be " +
+					"expected to return a promise instead");
+				*/
+				callback(undefined, this);
+			},
+			collection: function(name, callback)
+			{
+				if (name == 'nodeflow_db')
+				{
+					return this.nodeflow_db;
+				}
+				else
+				{
+					throw new Error("Unknown database: " +
+						name);
+				}
+			},
+			nodeflow_db: new FakeMongoDb(),
+		});
+		this.mongo = new FakeMongo();
+
+		this.server = new Server({mongo_db: this.mongo,
+			mongo_collection: 'nodeflow_db'});
+
 		this.conn = {
 			handlers: {},
 			on: function dispatcher(type, handler)
@@ -76,15 +132,15 @@ buster.testCase("Server", {
 			"response to the get_network_interfaces command");
 	},
 
-	"responds to incoming data from RabbitMQ by forwarding it": function()
+	"responds to incoming data from RabbitMQ by forwarding it to client": function()
 	{
 		// Mock the server's RabbitMQ context
-		this.server.context = {
+		extend(this.server.context, {
 			// Fake server.context.socket() method to return our fake socket
 			socket: function() {
-				return this.fake_socket;
+				return this.fake_rabbit_sub;
 			},
-			fake_socket: {
+			fake_rabbit_sub: {
 				// which has a connect() method that does nothing
 				connect: function() { },
 				// and an on() method which captures the handler
@@ -95,25 +151,15 @@ buster.testCase("Server", {
 				// and an object to store captured handlers
 				handlers: { },
 			},
-		};
+		});
 
-		// We also need a mock SockJS connection, which captures the
-		// data written to it.
-		var mock_connection = {
-			written: [],
-			write: function(data)
-			{
-				this.written.push(data);
-			},
-			// fake event handler for incoming packets from client
-			on: function(message) { },
-		};
-
-		// Initiate a fake "connection", check that the handler is bound
-		this.server.onConnection(mock_connection);
-		var handler = this.server.context.fake_socket.handlers.data;
+		this.server.run();
+		var handler = this.server.context.fake_rabbit_sub.handlers.data;
 		assert.defined(handler, "Server should have bound a handler " +
 			"for data events");
+
+		// Initiate a fake "connection", check that the handler is bound
+		// this.server.onConnection(mock_connection);
 
 		// Now send a test packet to the handler
 		var packet = {
@@ -121,7 +167,9 @@ buster.testCase("Server", {
 			timeslot_end: 2,
 		};
 
-		handler(JSON.stringify(packet));
+		// Send the packet to the handler
+		handler.call(this.server, JSON.stringify(packet));
+
 		var expected_write = ['packet',
 			{
 				timeslot_start: Date.parse('1'),
@@ -129,9 +177,12 @@ buster.testCase("Server", {
 			}
 		];
 
-		assert.equals(mock_connection.written[0],
+		assert.equals(this.conn.written[0],
 			JSON.stringify(expected_write),
 			"Server should have sent the packet to the " +
 			"connected SockJS client");
+
+		assert.equals(this.mongo.nodeflow_db.inserted, [expected_write[1]],
+			"Server should have sent the packet to MongoDB as well");
 	},
 });
