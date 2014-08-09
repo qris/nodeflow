@@ -8,19 +8,20 @@ node_js:
 before_install:
   - npm install -g grunt-cli
 before_script:
-# replace phantomjs with 2.0
+  # replace phantomjs with 2.0
   - uname -a
   - cat /etc/issue
-  - pwd
-  - ls
-  - ls node_modules
-  - ls node_modules/grunt-contrib-qunit
-  - ls node_modules/grunt-contrib-qunit/node_modules
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin
-  - ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
-  - cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
+  #- pwd
+  #- ls
+  #- ls node_modules
+  #- ls node_modules/grunt-contrib-qunit
+  #- ls node_modules/grunt-contrib-qunit/node_modules
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin
+  #- ls node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
+  # - cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs
+  - cp phantomjs_2/phantomjs_2_mac_linux_win/linux_64/phantomjs /usr/local/phantomjs/bin/phantomjs
