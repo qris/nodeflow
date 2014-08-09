@@ -44,10 +44,11 @@ command line with:
 Note: you need PhantomJS 2.0 for the tests to pass, but `npm` currently
 installs 1.9.7 instead, which
 [doesn't work](https://github.com/ariya/phantomjs/issues/10952). To upgrade
-your `npm` installation to 2.0:
+your `npm` installation of PhantomJS to 2.0:
 
 * [Download it here](https://groups.google.com/d/msg/phantomjs/cgTH-jqCSGg/RGWsAHiVSZAJ)
-* Open the ZIP file and extract the correct PhantomJS binary for your system
+  and unpack the ZIP file (or just look in the phantomjs_2 directory)
+* Find the correct PhantomJS binary for your system
 * Copy it to `node_modules/grunt-contrib-qunit/node_modules/grunt-lib-phantomjs/node_modules/phantomjs/lib/phantom/bin/phantomjs`,
 replacing the PhantomJS 1.9.7 binary installed by `grunt-contrib-qunit`.
 
