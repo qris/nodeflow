@@ -109,5 +109,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test:online', ['connect', 'qunit:online',]);
   grunt.registerTask('test:offline', ['qunit:offline',]);
-  grunt.registerTask('test', ['buster', 'test:offline',]);
+  grunt.registerTask('test:server', ['buster',]);
+  grunt.registerTask('test', ['test:server', 'test:offline',]);
 };
