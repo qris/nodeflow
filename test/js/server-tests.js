@@ -31,6 +31,9 @@ buster.testCase("Server", {
 		};
 		this.spy(this.conn, 'on');
 		this.server.onConnection(this.conn);
+		var message = this.conn.written.pop();
+		assert.equals({protocol: 'nodeflow', version: 0},
+			JSON.parse(message));
 	},
 
 	"binds a data handler": function()
