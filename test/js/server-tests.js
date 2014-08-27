@@ -29,7 +29,8 @@ buster.testCase("Server", {
 	{
 		// We need a mock MongoDB collection, which captures the
 		// data written to it.
-		function FakeMongoDb() {};
+		function FakeMongoDb() {}
+
 		extend(FakeMongoDb.prototype, {
 			inserted: [],
 			insert: function(data, callback)
@@ -44,7 +45,7 @@ buster.testCase("Server", {
 			}
 		});
 
-		function FakeMongo() {};
+		function FakeMongo() {}
 		extend(FakeMongo.prototype, {
 			connect: function(uri, callback)
 			{

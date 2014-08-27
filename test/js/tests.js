@@ -817,18 +817,15 @@ define(
 				"match new selected aggregation");
 		});
 
-		test("User can change time parameters", function() {
-			var con = create_controller();
-			var time_before = Date.now();
-			con.run();
-
+		function assertTimeSetup(con, time_window, time_before_change)
+		{
 			QUnit.strictEqual(undefined, con.time_start);
-			equal(60, con.time_window);
+			equal(time_window, con.time_window);
 
 			var chart_options = con.chart.update_x_axis();
-			ok(chart_options.now >= time_before,
+			ok(chart_options.now >= time_before_change,
 				"update_x_axis() should have returned the " +
-				"current timestamp (>= " + time_before + ")");
+				"current timestamp (>= " + time_before_change + ")");
 
 			var time_after = Date.now();
 			ok(chart_options.now <= time_after,
@@ -838,21 +835,39 @@ define(
 				"update_x_axis() should have set the chart " +
 				"maximum to the current time unless " +
 				"overridden by chart options");
-			equal(chart_options.min, chart_options.max - (60 * 1000),
+			equal(chart_options.min,
+				chart_options.max - (time_window * 1000),
 				"update_x_axis() should have set the chart " +
-				"minimum to 60 seconds ago, unless " +
-				"overridden by chart options");
+				"minimum to " + time_window + " seconds ago, " +
+				"unless overridden by chart options");
 
 			var axis_opts = con.chart.plot.getXAxes()[0].options;
-			ok(axis_opts.max >= time_before,
+			ok(axis_opts.max >= time_before_change,
 				"update_x_axis() max should have been " +
 				"applied to the chart's X axis");
 			ok(axis_opts.max <= time_after,
 				"update_x_axis() max should have been " +
 				"applied to the chart's X axis");
-			equal(axis_opts.min, axis_opts.max - 60*1000,
+			equal(axis_opts.min, axis_opts.max - (time_window * 1000),
 				"update_x_axis() min should have been " +
 				"applied to the chart's X axis");
+		}
+
+		test("Time parameters are initialised to defaults", function() {
+			var con = create_controller();
+			var time_before = Date.now();
+			con.run();
+			assertTimeSetup(con, 60, time_before);
+		});
+
+		test("Time parameters are initialised using hash params", function() {
+			var con = create_controller({
+				param_string: "time_window=70"
+			});
+			var time_before = Date.now();
+			con.run();
+			equal(70, con.chart.options.window_seconds);
+			assertTimeSetup(con, 70, time_before);
 		});
 	}
 );
