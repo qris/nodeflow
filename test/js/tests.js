@@ -614,7 +614,7 @@ define(
 		});
 
 		function assert_filters(controller, networks, aggregate,
-			labeller, message)
+			labeller, message, time_window)
 		{
 			deepEqual(controller.home_networks, networks,
 				"controller state: " + message);
@@ -664,8 +664,11 @@ define(
 			var home_networks_param =
 				(networks === undefined ? '' :
 				 ("home_networks=" + networks.join(',') + ';'));
+			time_window = time_window || controller.time_window;
+
 			equal(window.location.hash, '#' + home_networks_param +
-				'aggregate=' + aggregate,
+				'aggregate=' + aggregate + ";" +
+				'time_window=' + time_window,
 				"window location hash: " + message);
 		}
 
@@ -675,7 +678,8 @@ define(
 			"location hash parameters, except aggregate", function() {
 			var con = create_controller();
 			con.run();
-			equal(window.location.hash, "#aggregate=ip_src");
+			equal(window.location.hash, "#aggregate=ip_src;" +
+				"time_window=" + con.time_window);
 		});
 
 		test("Controller should initialise itself and form fields " +
@@ -868,6 +872,22 @@ define(
 			con.run();
 			equal(70, con.chart.options.window_seconds);
 			assertTimeSetup(con, 70, time_before);
+		});
+
+		test("User can change time parameters using GUI", function() {
+			var con = create_controller();
+			var time_before = Date.now();
+			con.run();
+
+			// test changing text box value
+			jquery('input[name=netgraph_time_window_input]').val('80').trigger('change');
+			equal(80, con.time_window);
+			equal(80, con.chart.options.window_seconds);
+			assertTimeSetup(con, 80, time_before);
+			equal(window.location.hash,
+				"#aggregate=ip_src;time_window=80",
+				"Hash parameters should have been updated " +
+				"when user changed the time window");
 		});
 	}
 );
