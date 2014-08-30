@@ -614,7 +614,7 @@ define(
 		});
 
 		function assert_filters(controller, networks, aggregate,
-			labeller, message, time_window)
+			labeller, message)
 		{
 			deepEqual(controller.home_networks, networks,
 				"controller state: " + message);
@@ -661,15 +661,14 @@ define(
 				networks || [],
 				"recorded old values of form fields: " + message);
 
-			var home_networks_param =
-				(networks === undefined ? '' :
-				 ("home_networks=" + networks.join(',') + ';'));
-			time_window = time_window || controller.time_window;
-
-			equal(window.location.hash, '#' + home_networks_param +
-				'aggregate=' + aggregate + ";" +
-				'time_window=' + time_window,
-				"window location hash: " + message);
+			var opts = controller.parse_params(
+				window.location.hash.substring(1));
+			deepEqual(networks, opts.home_networks,
+				"home_networks in window location hash: " +
+				message)
+			equal(aggregate, opts.aggregate,
+				"aggregate in window location hash: " +
+				message)
 		}
 
 		// This is kind of dodgy. Why not? It makes sense to keep the
