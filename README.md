@@ -14,6 +14,18 @@ To install dependencies on a freshly checked-out project:
 
 	npm install
 
+Many commands are run through `grunt`, which you can either install globally:
+
+	npm install -g grunt
+
+Or add to your `PATH`:
+
+	export PATH=`pwd`/node_modules/grunt-cli/bin:$PATH
+
+Or run using its relative path:
+
+	node_modules/grunt-cli/bin/grunt
+
 ## Running the interactive client
 
 To run the built-in RabbitMQ client and WebSocket server, to receive
