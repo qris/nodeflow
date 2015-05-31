@@ -665,10 +665,10 @@ define(
 				window.location.hash.substring(1));
 			deepEqual(networks, opts.home_networks,
 				"home_networks in window location hash: " +
-				message)
+				message);
 			equal(aggregate, opts.aggregate,
 				"aggregate in window location hash: " +
-				message)
+				message);
 		}
 
 		// This is kind of dodgy. Why not? It makes sense to keep the
