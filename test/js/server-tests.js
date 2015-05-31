@@ -24,6 +24,32 @@ assert.rpc = function() {
 	return JSON.parse(this.conn.written.pop());
 };
 
+var FakeResponse = function()
+{
+	this.status_code = undefined;
+	this.body = undefined;
+	this.ended = false;
+};
+
+FakeResponse.prototype.writeHead = function(status_code) {
+	assert(this.status_code === undefined);
+	assert(status_code !== undefined);
+	this.status_code = status_code;
+};
+
+FakeResponse.prototype.write = function(body) {
+	assert(this.status_code !== undefined);
+	assert(this.body === undefined);
+	assert(body !== undefined);
+	this.body = body;
+};
+
+FakeResponse.prototype.end = function(y) {
+	assert(!this.ended);
+	assert(this.body !== undefined);
+	this.ended = true;
+};
+
 buster.testCase("Server", {
 	setUp: function()
 	{
@@ -71,9 +97,15 @@ buster.testCase("Server", {
 		});
 		this.mongo = new FakeMongo();
 
-		this.server = new Server({mongo_db: this.mongo,
-			mongo_collection: 'nodeflow_db'});
+		this.server = new Server({
+			bind_port: 18080,
+			mongo_db: this.mongo,
+			mongo_collection: 'nodeflow_db',
+		});
 
+		// Pass a fake connection data struct to onConnection to simulate a connection,
+		// and save it so that we can inject data and see what the server wrote to this
+		// connection.
 		this.conn = {
 			handlers: {},
 			on: function dispatcher(type, handler)
@@ -103,6 +135,19 @@ buster.testCase("Server", {
 	{
 		assert.equals(assert.rpc.call(this, 123, 'foobar'),
 			['error', 123, 'foobar', 'unknown command']);
+	},
+
+	"responds to a request for a nonexistent file with a 404 status": function()
+	{
+		var req = {
+			url: 'http://localhost/nonexistent.html',
+		};
+
+		var res = new FakeResponse();
+		this.server.handler(req, res);
+		assert.equals(404, res.status_code, "The server should have sent a " +
+			"404 status code");
+
 	},
 
 	"responds to get_network_interfaces request": function()
