@@ -62,7 +62,7 @@ define(
 			return new Client.Controller(options);
 		}
 
-		test("create a Controller", function()
+		test("Create a Controller", function()
 		{
 			var sock = new FakeSockJsClient();
 			var con = new Client.Controller({
@@ -91,7 +91,7 @@ define(
 			"timeslot_end": 2000
 		};
 
-		asyncTest("send messages to Controller", function()
+		asyncTest("Send messages to Controller", function()
 		{
 			var db = new Client.Database({
 				filters: [
