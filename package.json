@@ -17,7 +17,6 @@
   "homepage": "https://github.com/qris/nodeflow",
   "dependencies": {
     "es6-promise": "^1.0.0",
-    "grunt-contrib-jshint": "^0.10.0",
     "mongodb": "^1.4.8",
     "promised-mongo": "^0.11.1",
     "q": "^1.0.1"
@@ -25,19 +24,21 @@
   "devDependencies": {
     "async": "^0.9.0",
     "bower": "^1.3.5",
-    "browserify": "^4.1.6",
+    "browserify": "^10.2.0",
     "buster": "^0.7.13",
     "extend": "^1.2.1",
     "grunt": "^0.4.5",
-    "grunt-browserify": "^2.1.0",
+    "grunt-browserify": "^3.8.0",
     "grunt-buster": "^0.3.1",
-    "grunt-contrib-connect": "^0.8.0",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-connect": "^0.10.1",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-contrib-livereload": "^0.1.2",
     "grunt-contrib-qunit": "^0.5.2",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-mocha-test": "^0.10.2",
     "grunt-watchify": "^0.1.0",
+    "grunt-web-server": "^1.2.3",
     "netmask": "^1.0.4",
     "npmlog": "0.0.6",
     "qunit": "^0.6.4",
@@ -45,7 +46,7 @@
     "sinon": "^1.10.3",
     "sockjs": "^0.3.9",
     "sockjs-client": "^0.1.3",
-    "watchify": "^0.10.2"
+    "watchify": "^3.2.1"
   },
   "license": "GPLv3"
 }
